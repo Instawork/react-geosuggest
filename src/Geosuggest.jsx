@@ -381,7 +381,7 @@ class Geosuggest extends React.Component {
           return;
         }
 
-        var gmaps = results[0],
+        var gmaps = results,
           location = gmaps.geometry.location;
 
         suggest.gmaps = gmaps;
