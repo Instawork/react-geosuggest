@@ -350,14 +350,22 @@ class Geosuggest extends React.Component {
    * @param  {Object} suggest The suggest
    */
   geocodeSuggest(suggest) {
-    this.geocoder.geocode(
-      suggest.placeId && !suggest.isFixture ?
-        {placeId: suggest.placeId} : {address: suggest.label},
-      (results, status) => {
+    let usePlaceId = suggest.placeId && !suggest.isFixture;
+    const byPlaceId = {placeId: suggest.placeId},
+      byAddress = {address: suggest.label},
+      params = usePlaceId ? byPlaceId : byAddress,
+      callback = (results, status) => {
+        // Instawork patch
+        // If placeId lookup does not return any result, try label as fallback
+        // See https://code.google.com/p/gmaps-api-issues/issues/detail?id=11107
+        if (this.googleMaps.GeocoderStatus.ZERO_RESULTS && usePlaceId) {
+          usePlaceId = false;
+          this.geocoder.geocode(byAddress, callback);
+          return;
+        }
         if (status !== this.googleMaps.GeocoderStatus.OK) {
           return;
         }
-
         var gmaps = results[0],
           location = gmaps.geometry.location;
 
@@ -368,8 +376,9 @@ class Geosuggest extends React.Component {
         };
 
         this.props.onSuggestSelect(suggest);
-      }
-    );
+      };
+
+    this.geocoder.geocode(params, callback);
   }
 
   /**
