@@ -78,6 +78,8 @@ class Geosuggest extends React.Component {
     this.googleMaps = googleMaps;
 
     this.autocompleteService = new googleMaps.places.AutocompleteService();
+    var map = new googleMaps.Map(document.createElement('div'));
+    this.placesService = new googleMaps.places.PlacesService(map);
     this.geocoder = new googleMaps.Geocoder();
   }
 
@@ -350,16 +352,15 @@ class Geosuggest extends React.Component {
    * @param  {Object} suggest The suggest
    */
   geocodeSuggest(suggest) {
-    this.geocoder.geocode(
+    this.placesService.getDetails(
       suggest.placeId && !suggest.isFixture ?
         {placeId: suggest.placeId} : {address: suggest.label},
-      (results, status) => {
+      (gmaps, status) => {
         if (status !== this.googleMaps.GeocoderStatus.OK) {
           return;
         }
 
-        var gmaps = results[0],
-          location = gmaps.geometry.location;
+        var location = gmaps.geometry.location;
 
         suggest.gmaps = gmaps;
         suggest.location = {
