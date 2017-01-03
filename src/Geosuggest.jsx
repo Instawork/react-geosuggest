@@ -84,7 +84,8 @@ class Geosuggest extends React.Component {
     if (GEOCODE_API !== this.props.api) {
       this.autocompleteService = new googleMaps.places.AutocompleteService();
     }
-    this.placesService = new googleMaps.places.PlacesService();
+    var map = new googleMaps.Map(document.createElement('div'));
+    this.placesService = new googleMaps.places.PlacesService(map);
     this.geocoder = new googleMaps.Geocoder();
   }
 
