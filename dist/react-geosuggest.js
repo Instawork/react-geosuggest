@@ -76,7 +76,8 @@ function is(x, y) {
   if (x === y) {
     // Steps 1-5, 7-10
     // Steps 6.b-6.e: +0 != -0
-    return x !== 0 || 1 / x === 1 / y;
+    // Added the nonzero y check to make Flow happy, but it is redundant
+    return x !== 0 || y !== 0 || 1 / x === 1 / y;
   } else {
     // Step 6.a: NaN == NaN
     return x !== x && y !== y;
@@ -507,8 +508,7 @@ module.exports = require('react/lib/shallowCompare');
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
-* @providesModule shallowCompare
-*/
+ */
 
 'use strict';
 
@@ -850,7 +850,7 @@ var Geosuggest = function (_React$Component) {
     value: function updateSuggests() {
       var _this3 = this;
 
-      var suggestsGoogle = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+      var suggestsGoogle = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
       var callback = arguments[1];
 
       var suggests = [],
@@ -897,7 +897,7 @@ var Geosuggest = function (_React$Component) {
   }, {
     key: 'updateActiveSuggest',
     value: function updateActiveSuggest() {
-      var suggests = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+      var suggests = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
       var activeSuggest = this.state.activeSuggest;
 
@@ -983,11 +983,22 @@ var Geosuggest = function (_React$Component) {
     value: function geocodeSuggest(suggest) {
       var _this4 = this;
 
-      this.geocoder.geocode(suggest.placeId && !suggest.isFixture ? { placeId: suggest.placeId } : { address: suggest.label }, function (results, status) {
+      var usePlaceId = suggest.placeId && !suggest.isFixture;
+      var byPlaceId = { placeId: suggest.placeId },
+          byAddress = { address: suggest.label },
+          params = usePlaceId ? byPlaceId : byAddress,
+          callback = function callback(results, status) {
+        // Instawork patch
+        // If placeId lookup does not return any result, try label as fallback
+        // See https://code.google.com/p/gmaps-api-issues/issues/detail?id=11107
+        if (_this4.googleMaps.GeocoderStatus.ZERO_RESULTS && usePlaceId) {
+          usePlaceId = false;
+          _this4.geocoder.geocode(byAddress, callback);
+          return;
+        }
         if (status !== _this4.googleMaps.GeocoderStatus.OK) {
           return;
         }
-
         var gmaps = results[0],
             location = gmaps.geometry.location;
 
@@ -998,7 +1009,9 @@ var Geosuggest = function (_React$Component) {
         };
 
         _this4.props.onSuggestSelect(suggest);
-      });
+      };
+
+      this.geocoder.geocode(params, callback);
     }
 
     /**
