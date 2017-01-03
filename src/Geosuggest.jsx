@@ -84,6 +84,7 @@ class Geosuggest extends React.Component {
     if (GEOCODE_API !== this.props.api) {
       this.autocompleteService = new googleMaps.places.AutocompleteService();
     }
+    this.placesService = new googleMaps.places.PlacesService();
     this.geocoder = new googleMaps.Geocoder();
   }
 
@@ -371,7 +372,7 @@ class Geosuggest extends React.Component {
    * @param  {Object} suggest The suggest
    */
   geocodeSuggest(suggest) {
-    this.geocoder.geocode(
+    this.placesService.getDetails(
       suggest.placeId && !suggest.isFixture ?
         {placeId: suggest.placeId} : {address: suggest.label},
       (results, status) => {

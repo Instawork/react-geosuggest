@@ -219,6 +219,7 @@ var Geosuggest = function (_React$Component) {
       if (GEOCODE_API !== this.props.api) {
         this.autocompleteService = new googleMaps.places.AutocompleteService();
       }
+      this.placesService = new googleMaps.places.PlacesService();
       this.geocoder = new googleMaps.Geocoder();
     }
 
@@ -477,7 +478,7 @@ var Geosuggest = function (_React$Component) {
     value: function geocodeSuggest(suggest) {
       var _this4 = this;
 
-      this.geocoder.geocode(suggest.placeId && !suggest.isFixture ? { placeId: suggest.placeId } : { address: suggest.label }, function (results, status) {
+      this.placesService.getDetails(suggest.placeId && !suggest.isFixture ? { placeId: suggest.placeId } : { address: suggest.label }, function (results, status) {
         if (status !== _this4.googleMaps.GeocoderStatus.OK) {
           return;
         }
